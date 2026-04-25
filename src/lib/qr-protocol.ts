@@ -13,7 +13,7 @@ import LZString from "lz-string";
 import type { MeshMessage } from "./db";
 
 const PROTO = "MR1";
-const CHUNK_SIZE = 600; // chars; safely fits in QR M-level density
+const CHUNK_SIZE = 350; // Smaller chunks = less dense QR codes, easier for cameras to read
 
 export interface QrPayload {
   // Bundle of messages being shared in this batch.
