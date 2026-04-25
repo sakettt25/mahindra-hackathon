@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { PeerConnection, type PeerStatus } from "@/lib/webrtc";
 import { QrCode, ScanLine, Copy, Check, Network, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { compressToUTF16, decompressFromUTF16 } from "lz-string";
+import { compressToBase64, decompressFromBase64 } from "lz-string";
 
 export const Route = createFileRoute("/peer")({
   component: PeerPage,
@@ -35,17 +35,17 @@ function PeerPage() {
     if (!pcRef.current) return;
     setMode("host");
     const sdpOffer = await pcRef.current.createOffer();
-    // Compress SDP for QR Code
-    setOffer(compressToUTF16(sdpOffer));
+    // Compress SDP for QR Code / Copying
+    setOffer(compressToBase64(sdpOffer));
   };
 
   const handleCreateAnswer = async (remoteOfferCompressed: string) => {
     if (!pcRef.current) return;
     try {
-      const remoteOffer = decompressFromUTF16(remoteOfferCompressed);
+      const remoteOffer = decompressFromBase64(remoteOfferCompressed);
       if (!remoteOffer) throw new Error("Invalid SDP");
       const sdpAnswer = await pcRef.current.handleOffer(remoteOffer);
-      setAnswer(compressToUTF16(sdpAnswer));
+      setAnswer(compressToBase64(sdpAnswer));
     } catch (e) {
       toast.error("Failed to parse remote offer.");
     }
@@ -54,7 +54,7 @@ function PeerPage() {
   const handleProcessAnswer = async (remoteAnswerCompressed: string) => {
     if (!pcRef.current) return;
     try {
-      const remoteAnswer = decompressFromUTF16(remoteAnswerCompressed);
+      const remoteAnswer = decompressFromBase64(remoteAnswerCompressed);
       if (!remoteAnswer) throw new Error("Invalid SDP");
       await pcRef.current.handleAnswer(remoteAnswer);
     } catch (e) {
