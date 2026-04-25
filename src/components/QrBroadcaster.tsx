@@ -29,7 +29,7 @@ export function QrBroadcaster({ frames, intervalMs = 3000, size = 320 }: Props) 
       width: size,
       margin: 1,
       errorCorrectionLevel: "M",
-      color: { dark: "#0d1116", light: "#f5d57a" },
+      color: { dark: "#000000", light: "#ffffff" },
     }).catch(() => {
       /* ignore render errors for oversized payloads */
     });

@@ -39,7 +39,7 @@ export function QrScanner({ onPayload, onRawString }: Props) {
     try {
       await scannerRef.current.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 240, height: 240 } },
+        { fps: 10 },
         (text) => handleText(text),
         () => {},
       );
