@@ -88,12 +88,12 @@ function HomePage() {
         <Tile to="/peer" label="WebRTC Link" icon={Network} hint="Direct connect" />
         <Tile to="/feed" label="Mesh Feed" icon={MessageSquare} hint="All messages" />
       </div>
+      <div className="mb-6 grid grid-cols-1">
         <Tile
           to="/simulator"
           label="Mesh Sim"
           icon={Radio}
           hint="Demo A→B→C"
-          className="col-span-2"
         />
       </div>
 
