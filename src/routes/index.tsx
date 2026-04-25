@@ -57,11 +57,37 @@ function HomePage() {
         <span className="mono text-lg font-bold uppercase tracking-wider">Emergency Broadcast</span>
       </Link>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Tile to="/broadcast" label="Broadcast" icon={QrCode} hint="Send a message" />
-        <Tile to="/scan" label="Scan" icon={ScanLine} hint="Receive via QR" />
-        <Tile to="/peer" label="WebRTC" icon={Network} hint="Direct connect" />
-        <Tile to="/feed" label="Feed" icon={MessageSquare} hint="All messages" />
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Optical Mesh (Communal Drops)
+        </h2>
+      </div>
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        <Tile 
+          to="/broadcast" 
+          label="Create Drop" 
+          icon={QrCode} 
+          hint="Broadcast via QR" 
+          className="border-signal/50 bg-signal/5 glow-signal"
+        />
+        <Tile 
+          to="/scan" 
+          label="Scan Drop" 
+          icon={ScanLine} 
+          hint="Ingest nearby data" 
+          className="border-important/50 bg-important/5 drop-shadow-[0_0_8px_rgba(239,68,68,0.15)]"
+        />
+      </div>
+
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Real-Time Tunnels
+        </h2>
+      </div>
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        <Tile to="/peer" label="WebRTC Link" icon={Network} hint="Direct connect" />
+        <Tile to="/feed" label="Mesh Feed" icon={MessageSquare} hint="All messages" />
+      </div>
         <Tile
           to="/simulator"
           label="Mesh Sim"

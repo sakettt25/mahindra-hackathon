@@ -24,10 +24,9 @@ function ScanPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-1 mono text-xl font-bold">Scan</h1>
+      <h1 className="mb-1 mono text-xl font-bold">Scan Data Drop</h1>
       <p className="mb-5 text-sm text-muted-foreground">
-        Receive a multi-frame QR broadcast from a nearby device. Signatures are verified before
-        storage; duplicates are silently skipped.
+        Ingest a Communal Data Drop from a nearby device. Signatures are verified before storage; duplicates are silently skipped.
       </p>
       <QrScanner
         onPayload={async (payload) => {

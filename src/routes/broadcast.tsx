@@ -139,10 +139,9 @@ function BroadcastPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-1 mono text-xl font-bold">Broadcast</h1>
+      <h1 className="mb-1 mono text-xl font-bold">Create Data Drop</h1>
       <p className="mb-5 text-sm text-muted-foreground">
-        Composed messages are signed with your device key, stored locally, and queued for relay
-        through the mesh.
+        Composed messages are signed with your device key and broadcasted optically as a Communal Data Drop.
       </p>
 
       <div className="mb-4">
