@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useIdentity } from "@/hooks/useIdentity";
 import { useState, useEffect, useRef } from "react";
-import { PeerConnection, type PeerStatus } from "@/lib/webrtc";
+import { getGlobalPeerConnection, type PeerStatus } from "@/lib/webrtc";
 import { QrCode, ScanLine, Copy, Check, Network, ArrowLeft, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { compressToBase64, decompressFromBase64 } from "lz-string";
@@ -23,16 +23,26 @@ function PeerPage() {
   const [remoteInput, setRemoteInput] = useState<string>("");
   const [showQr, setShowQr] = useState<"offer" | "answer" | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const pcRef = useRef<PeerConnection | null>(null);
+  const pcRef = useRef<ReturnType<typeof getGlobalPeerConnection> | null>(null);
 
   useEffect(() => {
     if (!identity) return;
-    const pc = new PeerConnection(identity, setStatus, (count) => {
-      toast.success(`Received ${count} new messages via WebRTC!`);
-    });
+    const pc = getGlobalPeerConnection(identity);
     pcRef.current = pc;
+    
+    // Sync initial status
+    setStatus(pc.status);
+    
+    // Attach listeners
+    pc.onStatusChange = (newStatus) => setStatus(newStatus);
+    pc.onMessageReceived = (count) => {
+      toast.success(`Received ${count} new messages via WebRTC!`);
+    };
+
     return () => {
-      pc.close();
+      // Do NOT close the connection on unmount, just remove listeners to avoid memory leaks
+      pc.onStatusChange = undefined;
+      pc.onMessageReceived = undefined;
     };
   }, [identity]);
 

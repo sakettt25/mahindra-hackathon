@@ -10,17 +10,11 @@ export class PeerConnection {
   public status: PeerStatus = "disconnected";
 
   private identity: Identity;
-  private onStatusChange: (status: PeerStatus) => void;
-  private onMessageReceived: (count: number) => void;
+  public onStatusChange?: (status: PeerStatus) => void;
+  public onMessageReceived?: (count: number) => void;
 
-  constructor(
-    identity: Identity,
-    onStatusChange: (status: PeerStatus) => void,
-    onMessageReceived: (count: number) => void,
-  ) {
+  constructor(identity: Identity) {
     this.identity = identity;
-    this.onStatusChange = onStatusChange;
-    this.onMessageReceived = onMessageReceived;
 
     // We use google's public STUN servers for local network discovery if allowed,
     // but the app should work purely via local connection with SDP exchange even without STUN
@@ -51,11 +45,18 @@ export class PeerConnection {
     this.pc.ondatachannel = (event) => {
       this.setupDataChannel(event.channel);
     };
+
+    // Auto-sync heartbeat every 3 seconds while connected
+    setInterval(() => {
+      if (this.status === "connected") {
+        this.syncMessages();
+      }
+    }, 3000);
   }
 
   private updateStatus(status: PeerStatus) {
     this.status = status;
-    this.onStatusChange(status);
+    if (this.onStatusChange) this.onStatusChange(status);
   }
 
   public async createOffer(): Promise<string> {
@@ -151,7 +152,7 @@ export class PeerConnection {
       try {
         const payload: QrPayload = JSON.parse(event.data);
         const result = await ingestPayload(this.identity, payload);
-        if (result.accepted > 0) {
+        if (result.accepted > 0 && this.onMessageReceived) {
           this.onMessageReceived(result.accepted);
         }
       } catch (err) {
@@ -185,4 +186,14 @@ export class PeerConnection {
     if (this.pc) this.pc.close();
     this.updateStatus("disconnected");
   }
+}
+
+let globalConnection: PeerConnection | null = null;
+
+export function getGlobalPeerConnection(identity: Identity): PeerConnection {
+  if (!globalConnection || globalConnection.status === "disconnected" || globalConnection.status === "error") {
+    if (globalConnection) globalConnection.close();
+    globalConnection = new PeerConnection(identity);
+  }
+  return globalConnection;
 }
