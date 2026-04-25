@@ -7,10 +7,11 @@ import { Camera, CameraOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
-  onPayload: (p: QrPayload) => void;
+  onPayload?: (p: QrPayload) => void;
+  onRawString?: (s: string) => void;
 }
 
-export function QrScanner({ onPayload }: Props) {
+export function QrScanner({ onPayload, onRawString }: Props) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const assemblerRef = useRef(new FrameAssembler());
@@ -53,8 +54,12 @@ export function QrScanner({ onPayload }: Props) {
     if (!frame) return;
     const r = assemblerRef.current.add(frame);
     setProgress({ received: r.received, total: r.total });
-    if (r.complete && r.payload) {
-      onPayload(r.payload);
+    if (r.complete) {
+      if (r.payload && onPayload) {
+        onPayload(r.payload);
+      } else if (r.rawString && onRawString) {
+        onRawString(r.rawString);
+      }
       setProgress(null);
     }
   };

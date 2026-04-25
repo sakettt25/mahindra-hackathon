@@ -22,9 +22,8 @@ export interface QrPayload {
   sentAt: number;
 }
 
-export function encodePayloadToFrames(payload: QrPayload): string[] {
-  const json = JSON.stringify(payload);
-  const compressed = LZString.compressToBase64(json);
+export function encodeStringToFrames(data: string): string[] {
+  const compressed = LZString.compressToBase64(data);
   const batchId = Math.random().toString(36).slice(2, 8);
   const chunks: string[] = [];
   for (let i = 0; i < compressed.length; i += CHUNK_SIZE) {
@@ -32,6 +31,11 @@ export function encodePayloadToFrames(payload: QrPayload): string[] {
   }
   const total = chunks.length;
   return chunks.map((c, idx) => `${PROTO}|${batchId}|${idx}|${total}|${c}`);
+}
+
+export function encodePayloadToFrames(payload: QrPayload): string[] {
+  const json = JSON.stringify(payload);
+  return encodeStringToFrames(json);
 }
 
 export interface FrameInfo {
@@ -68,6 +72,7 @@ export class FrameAssembler {
     complete: boolean;
     received: number;
     total: number;
+    rawString?: string;
     payload?: QrPayload;
     timedOut?: boolean;
   } {
@@ -96,10 +101,23 @@ export class FrameAssembler {
       }
       this.batches.delete(frame.batchId);
       try {
-        const json = LZString.decompressFromBase64(combined);
-        if (!json) return { complete: false, received: entry.total, total: entry.total };
-        const payload = JSON.parse(json) as QrPayload;
-        return { complete: true, received: entry.total, total: entry.total, payload };
+        const decompressed = LZString.decompressFromBase64(combined);
+        if (!decompressed) return { complete: false, received: entry.total, total: entry.total };
+        
+        let payload: QrPayload | undefined;
+        try {
+          payload = JSON.parse(decompressed) as QrPayload;
+        } catch {
+          // Might just be a raw string (like SDP), not JSON
+        }
+        
+        return { 
+          complete: true, 
+          received: entry.total, 
+          total: entry.total, 
+          rawString: decompressed,
+          payload 
+        };
       } catch {
         return { complete: false, received: entry.total, total: entry.total };
       }
