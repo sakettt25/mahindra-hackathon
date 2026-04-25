@@ -10,7 +10,7 @@ interface Props {
   size?: number;
 }
 
-export function QrBroadcaster({ frames, intervalMs = 700, size = 280 }: Props) {
+export function QrBroadcaster({ frames, intervalMs = 3000, size = 280 }: Props) {
   const [idx, setIdx] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 

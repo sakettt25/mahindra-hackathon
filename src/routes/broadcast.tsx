@@ -10,6 +10,7 @@ import { encodePayloadToFrames } from "@/lib/qr-protocol";
 import { db, type Priority } from "@/lib/db";
 import { toast } from "sonner";
 import { Siren, AlertTriangle, Info } from "lucide-react";
+import { getGlobalPeerConnection } from "@/lib/webrtc";
 
 const search = z.object({
   priority: z.enum(["emergency", "important", "general"]).optional(),
@@ -88,6 +89,16 @@ function BroadcastPage() {
     if (content.trim()) {
       await createBroadcast(identity, content, priority);
     }
+    
+    // If actively connected via WebRTC, skip the QR code and just sync directly.
+    const pc = getGlobalPeerConnection(identity);
+    if (pc.status === "connected") {
+      toast.success("Message sent instantly over WebRTC tunnel!");
+      pc.syncMessages(); // Force immediate sync instead of waiting 3s
+      reset();
+      return;
+    }
+
     const ids = includeForwarded ? undefined : extraIds.length > 0 ? extraIds : [];
     const payload = await buildOutgoingPayload(identity, undefined, ids);
     const f = encodePayloadToFrames(payload);
@@ -202,7 +213,9 @@ function BroadcastPage() {
       >
         {overLimit
           ? "Message too long"
-          : `Generate broadcast QR (${totalToBundle === "all" ? "all from store" : `${totalToBundle} msg`})`}
+          : identity && getGlobalPeerConnection(identity).status === "connected"
+            ? "Send via WebRTC Tunnel"
+            : `Generate broadcast QR (${totalToBundle === "all" ? "all from store" : `${totalToBundle} msg`})`}
       </Button>
     </AppShell>
   );
