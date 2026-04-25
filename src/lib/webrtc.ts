@@ -65,19 +65,31 @@ export class PeerConnection {
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
 
-    // Wait for ICE gathering to complete so SDP includes candidates
+    // Wait for ICE gathering to complete (or timeout after 1.5s for offline scenarios)
     await new Promise<void>((resolve) => {
       if (this.pc.iceGatheringState === "complete") {
         resolve();
-      } else {
-        const checkState = () => {
-          if (this.pc.iceGatheringState === "complete") {
-            this.pc.removeEventListener("icegatheringstatechange", checkState);
-            resolve();
-          }
-        };
-        this.pc.addEventListener("icegatheringstatechange", checkState);
+        return;
       }
+      
+      let resolved = false;
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          this.pc.removeEventListener("icegatheringstatechange", checkState);
+          resolve();
+        }
+      }, 1500);
+
+      const checkState = () => {
+        if (this.pc.iceGatheringState === "complete" && !resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          this.pc.removeEventListener("icegatheringstatechange", checkState);
+          resolve();
+        }
+      };
+      this.pc.addEventListener("icegatheringstatechange", checkState);
     });
 
     return JSON.stringify(this.pc.localDescription);
@@ -90,19 +102,31 @@ export class PeerConnection {
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
 
-    // Wait for ICE gathering to complete
+    // Wait for ICE gathering to complete (or timeout)
     await new Promise<void>((resolve) => {
       if (this.pc.iceGatheringState === "complete") {
         resolve();
-      } else {
-        const checkState = () => {
-          if (this.pc.iceGatheringState === "complete") {
-            this.pc.removeEventListener("icegatheringstatechange", checkState);
-            resolve();
-          }
-        };
-        this.pc.addEventListener("icegatheringstatechange", checkState);
+        return;
       }
+
+      let resolved = false;
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          this.pc.removeEventListener("icegatheringstatechange", checkState);
+          resolve();
+        }
+      }, 1500);
+
+      const checkState = () => {
+        if (this.pc.iceGatheringState === "complete" && !resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          this.pc.removeEventListener("icegatheringstatechange", checkState);
+          resolve();
+        }
+      };
+      this.pc.addEventListener("icegatheringstatechange", checkState);
     });
 
     return JSON.stringify(this.pc.localDescription);
