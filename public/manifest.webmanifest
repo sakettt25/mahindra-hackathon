@@ -1,0 +1,18 @@
+{
+  "name": "MeshRelay — Disaster Comms",
+  "short_name": "MeshRelay",
+  "description": "Offline-first peer-to-peer mesh messaging for internet shutdowns.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1f26",
+  "theme_color": "#1a1f26",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
