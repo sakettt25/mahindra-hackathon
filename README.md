@@ -1,137 +1,92 @@
-# MeshRelay — Internet Shutdown Communication Layer
+# MeshRelay 🌐 
 
-> Offline-first peer-to-peer mesh messaging for civilians during internet blackouts.
-> No servers. No accounts. No tracking. Just QR codes and your phone's browser.
+**Zero-Infrastructure Disaster Comms**
 
-MeshRelay is a Progressive Web App that lets people communicate when the
-internet, cell networks, and Wi-Fi are all unavailable. Messages hop physically
-from device to device via QR codes — every device is a relay.
+An offline-first, peer-to-peer web application designed for civilians in a fully network-blackout environment. When cellular towers fall and the internet is cut, MeshRelay enables secure, multi-hop information routing using only the hardware already in your pocket: **your browser and your camera.**
 
-## How it works
+---
 
-```
-     ┌──────────┐    QR     ┌──────────┐    QR     ┌──────────┐
-     │ Device A │ ────────▶ │ Device B │ ────────▶ │ Device C │
-     │ (origin) │           │ (relay)  │           │ (relay)  │
-     └──────────┘           └──────────┘           └──────────┘
-        hop 0                  hop 1                  hop 2
-        ttl 12                 ttl 11                 ttl 10
-```
+## 🎯 The Problem Solved
+> *"Design an offline-first web application that enables civilians in a fully network-blackout environment to share, relay, and access critical information using peer-to-peer local communication and QR-based communal data drops."*
 
-1. Author signs a message with their device key (Web Crypto, ECDSA P-256).
-2. Message is JSON-encoded → LZ-compressed → split into ~600-byte chunks.
-3. Each chunk becomes one QR frame; the sender cycles through them.
-4. The receiver's camera reads frames, reassembles the batch, **verifies the
-   signature**, dedupes against `seen` IDs, decrements TTL, increments hops,
-   stores it.
-5. The next time the receiver broadcasts, it gossips this message onward
-   (priority-sorted: emergency first).
+**How MeshRelay perfectly meets the requirements:**
+* **Zero Internet Functionality:** Built entirely as an offline-first PWA. Once loaded, it caches itself in the browser and requires zero external servers.
+* **Dual Transport Layer:** Features an **Optical Mesh** (QR data drops) for asynchronous sharing, and **WebRTC Tunnels** for synchronous local P2P.
+* **Multi-Hop Propagation:** Implements an Epidemic Routing (Gossip) protocol. Device A scans a message to Device B. When Device B meets Device C, B automatically relays A's original message.
+* **Consumer Hardware:** Runs purely in mobile browsers (Chrome/Safari). No native `.apk` downloads, no Bluetooth pairing permission hurdles, and low resource drain.
 
-## Features
+---
 
-- **Crisis UI** — high-contrast disaster theme, oversized tap targets, color-coded priority
-- **QR transport** — chunked + animated, manual paste fallback, base-64 LZ compression
-- **Multi-hop gossip** — TTL, hop count, seenBy tracking, loop prevention
-- **Signed broadcasts** — every message carries an ECDSA signature; relays cannot tamper
-- **Local-first** — Dexie/IndexedDB; zero network calls at runtime
-- **Demo simulator** — three virtual devices showing A→B→C propagation live
-- **Installable** — web app manifest for Add to Home Screen
+## 🏗️ System Architecture
 
-## Setup
+MeshRelay uses a decentralized, cryptographically secure mesh architecture. Every browser acts as an independent Node.
 
-```bash
-bun install
-bun dev
+```mermaid
+graph TD
+    A[Device A<br>No Internet] -->|1. ECDSA Signature| DB_A[(Local IndexedDB)]
+    
+    subgraph Asynchronous Routing
+    DB_A -->|2. LZ Compression| QR[Animated QR Code<br>Communal Drop]
+    QR -.->|3. Optical Scan| B[Device B<br>No Internet]
+    end
+
+    subgraph Synchronous Routing
+    DB_A <-->|Direct Local Tunnel| WebRTC((WebRTC P2P))
+    WebRTC <--> DB_B[(Local IndexedDB)]
+    end
+
+    B -->|4. Verify Signature| DB_B
+    B -->|5. Piggyback A's Data| QR2[New QR Drop]
+    QR2 -.->|6. Multi-Hop| C[Device C]
+    C -->|Verifies & Stores| DB_C[(Local IndexedDB)]
 ```
 
-Open the dev URL on multiple devices (or browser tabs/profiles) on the same
-network for testing the full QR flow with real cameras.
+### 1. Optical Mesh (Communal Data Drops)
+Because browsers cannot silently scan local networks due to security sandboxes, MeshRelay uses light as the primary transport mechanism.
+* Messages are serialized into JSON, highly compressed via `LZString`, and chunked into base64 frames.
+* The device broadcasts these frames as an animated sequence of high-contrast QR codes.
+* Any nearby device can use its camera to ingest the sequence, reassemble the chunks, and verify the cryptographic signature.
 
-## Demo (real devices)
+### 2. Real-Time Tunnels (WebRTC)
+For high-bandwidth scenarios (e.g., users sitting together in a bunker), users can establish a direct local tunnel.
+* Device A generates a massive SDP Offer (connection locks/IP). 
+* Instead of needing the internet to share this key, **Device A converts the SDP Key itself into a QR Code**.
+* Device B scans it, and they establish an invisible, bidirectional background sync tunnel.
 
-1. Open MeshRelay on **Phone A**, tap **Emergency Broadcast**, write a message,
-   generate the QR.
-2. Open MeshRelay on **Phone B**, go to **Scan**, point at A's QR. Wait for
-   "RECEIVING X/X" to complete. Message appears in B's feed at `hops: 1`.
-3. Walk Phone B to **Phone C**. Open Feed on B, tap **Relay** on the message,
-   generate the QR. Have C scan it. Message appears on C at `hops: 2`.
-4. Open **Mesh Sim** on any device for an animated 3-node demo with the same
-   protocol running in-memory (great for judges who can't gather 3 phones).
+### 3. Cryptographic Trust
+To prevent bad actors from tampering with relayed messages:
+* On initialization, every device generates an **ECDSA P-256 Keypair** via the native Web Crypto API.
+* Every message is uniquely signed. If Device C receives Device A's message relayed through Device B, Device C verifies A's original signature. If it fails, the message is silently dropped.
 
-## Architecture
+---
 
-```
-src/
-├── lib/
-│   ├── db.ts            Dexie schema (messages, identity, seen)
-│   ├── crypto.ts        Web Crypto identity, sign / verify
-│   ├── qr-protocol.ts   chunking, framing, reassembly (FrameAssembler)
-│   ├── mesh.ts          ingest, dedupe, TTL/hops, gossip payload builder
-│   └── simulator.ts     in-memory virtual devices for the demo page
-├── components/
-│   ├── AppShell.tsx     header + bottom nav, online indicator
-│   ├── QrBroadcaster    animated multi-frame QR
-│   ├── QrScanner        html5-qrcode camera + paste fallback
-│   ├── MessageCard      priority-bordered message item
-│   ├── MeshGraph        SVG visualization for simulator
-│   └── PriorityBadge / OfflineIndicator
-├── routes/
-│   ├── index.tsx        Home dashboard
-│   ├── broadcast.tsx    Compose + generate QR
-│   ├── scan.tsx         Receive via camera
-│   ├── feed.tsx         Local message store
-│   ├── simulator.tsx    Built-in 3-device mesh demo
-│   └── settings.tsx     Identity, export, wipe
-└── hooks/
-    ├── useIdentity.ts
-    ├── useMessages.ts
-    └── useOnlineStatus.ts
-```
+## 🚀 How to Demo for Judges
 
-### Multi-hop propagation logic
+To properly demonstrate the multi-hop capabilities of the system, we recommend using two phones.
 
-Each message carries:
+**Scenario 1: The Optical Drop (Stranger Passing By)**
+1. On **Phone A**, go to `Create Data Drop`. Type an emergency message ("Need medical supplies at Main St").
+2. Check the box to *"Piggyback unseen messages"* (this enables the Gossip Protocol).
+3. On **Phone B**, go to `Scan Data Drop`. Point the camera at Phone A's flashing QR code.
+4. Watch Phone B instantly verify and ingest the message into its local Feed!
 
-```ts
-{
-  id, content, priority, timestamp,
-  ttl,                // decremented at every hop
-  originDeviceId,     // never changes
-  originPubKey,       // for signature verification
-  hops,               // incremented at every hop
-  signature,          // signed over the immutable fields above
-  seenBy: string[]    // ids of every device that has stored this message
-}
-```
+**Scenario 2: The Direct Tunnel (Establishing a Base)**
+1. On **Phone A**, go to `WebRTC Link` and click **Host Connection**.
+2. On **Phone B**, go to `WebRTC Link`, click **Join Connection**, and tap the camera icon to scan Phone A's code.
+3. Phone B will generate an Answer QR. Scan it with Phone A.
+4. You are now connected! Go to the `Feed` tab on both phones. 
+5. Any message typed on Phone A will now magically appear on Phone B in exactly 3 seconds, silently synced through the air without internet or QR codes.
 
-On receive: verify signature → check `seen` table → if new and `ttl > 0`,
-store with `hops + 1`, `ttl - 1`, append our id to `seenBy`. When building an
-outgoing batch, we skip messages where `seenBy` already includes the target,
-preventing redundant retransmission and loops.
+**Scenario 3: The Algorithm (Mesh Sim)**
+1. Open the `Mesh Sim` tab on a large screen or laptop.
+2. This is a visual sandbox demonstrating how the underlying Gossip algorithm works at scale with up to 26 devices.
+3. Toggle connections and watch how messages "hop" efficiently without infinite loops.
 
-### Offline-first design
+---
 
-- App shell + assets are static and cacheable by the browser; no API calls.
-- All persistent state in IndexedDB (Dexie). Identity keypair is generated on
-  first launch and never leaves the device.
-- The "online" indicator is informational only — the app is fully functional
-  with airplane mode on.
-
-### Security model
-
-- **Identity:** ECDSA P-256 keypair generated via Web Crypto on first launch.
-- **Signing:** every broadcast is signed over its immutable fields. Receivers
-  reject unsigned or invalid messages.
-- **No encryption of content:** broadcasts are public to anyone in mesh range,
-  by design (think public radio band). E2E-encrypted DMs are a future addition.
-- **No central trust:** there is no key server. Trust is per-message via
-  signature verification against the embedded `originPubKey`.
-
-## Tech stack
-
-Vite • React 19 • TypeScript • TanStack Router • Tailwind v4 •
-Dexie (IndexedDB) • qrcode + html5-qrcode • lz-string • Web Crypto API.
-
-## License
-
-MIT — use it, fork it, ship it where it's needed.
+## 🛠️ Tech Stack
+* **Framework:** React 19 + Vite (PWA)
+* **Storage:** Dexie.js (IndexedDB for persistent offline storage)
+* **Crypto:** Native Web Crypto API (ECDSA P-256)
+* **Compression:** LZ-String (Base64 chunking for QR density control)
+* **Styling:** Tailwind CSS v4 (Glassmorphism & High Contrast Dark Mode)
