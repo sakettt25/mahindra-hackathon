@@ -24,24 +24,33 @@ function HomePage() {
 
   return (
     <AppShell>
-      <section className="mb-6 rounded-2xl border border-signal/30 bg-card p-5 glow-signal">
-        <div className="flex items-start justify-between gap-3">
+      <section className="mb-8 relative overflow-hidden rounded-3xl border border-signal/40 bg-card p-6 glow-signal glass-panel">
+        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+          <Radio className="h-32 w-32 text-signal" />
+        </div>
+        <div className="relative z-10 flex items-start justify-between gap-4">
           <div>
-            <div className="mono text-[10px] uppercase tracking-widest text-signal">
-              MESH NODE ACTIVE
+            <div className="inline-flex items-center gap-2 mb-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-signal opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-signal"></span>
+              </span>
+              <span className="mono text-xs uppercase tracking-widest text-signal font-bold">
+                MESH NODE ACTIVE
+              </span>
             </div>
-            <h1 className="mt-1 mono text-2xl font-bold text-foreground">
+            <h1 className="mt-1 text-3xl font-extrabold text-foreground tracking-tight drop-shadow-sm">
               {identity?.name ?? "Initializing…"}
             </h1>
-            <div className="mt-1 mono text-xs text-muted-foreground">
-              ID {identity?.deviceId ?? "—"} · key Ed-P256
+            <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-black/40 px-3 py-1.5 border border-border">
+              <span className="mono text-xs text-muted-foreground">ID</span>
+              <span className="mono text-xs font-bold text-foreground">{identity?.deviceId ?? "—"}</span>
+              <span className="text-muted-foreground text-xs">•</span>
+              <span className="mono text-xs text-muted-foreground">Ed-25519</span>
             </div>
           </div>
-          <div className="rounded-xl border border-signal/40 bg-signal/10 p-3">
-            <Radio className="h-6 w-6 text-signal" />
-          </div>
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
           <Stat label="MESSAGES" value={messages.length} />
           <Stat label="EMERGENCY" value={emergencyCount} accent="emergency" />
           <Stat label="RELAYED" value={messages.filter((m) => m.hops > 0).length} />
@@ -51,40 +60,46 @@ function HomePage() {
       <Link
         to="/broadcast"
         search={{ priority: "emergency" }}
-        className="mb-6 flex items-center justify-center gap-3 rounded-2xl border-2 border-emergency bg-emergency/15 px-6 py-5 text-emergency hover:bg-emergency/25 pulse-emergency"
+        className="mb-8 flex items-center justify-center gap-4 rounded-3xl border border-emergency/50 bg-gradient-to-r from-emergency/20 to-emergency/5 px-6 py-6 text-emergency hover:bg-emergency/30 pulse-emergency glass-panel animate-float hover:border-emergency shadow-lg shadow-emergency/20"
       >
-        <Siren className="h-7 w-7" />
-        <span className="mono text-lg font-bold uppercase tracking-wider">Emergency Broadcast</span>
+        <Siren className="h-8 w-8 drop-shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+        <span className="text-xl font-extrabold uppercase tracking-widest drop-shadow-sm">Emergency Broadcast</span>
       </Link>
 
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Optical Mesh (Communal Drops)
+      <div className="mb-4 flex items-center gap-3">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
+        <h2 className="mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+          Optical Mesh (Communal)
         </h2>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
       </div>
-      <div className="mb-6 grid grid-cols-2 gap-3">
+      
+      <div className="mb-8 grid grid-cols-2 gap-4">
         <Tile 
           to="/broadcast" 
           label="Create Drop" 
           icon={QrCode} 
           hint="Broadcast via QR" 
-          className="border-signal/50 bg-signal/5 glow-signal"
+          className="border-signal/50 bg-gradient-to-br from-signal/10 to-transparent glow-signal"
         />
         <Tile 
           to="/scan" 
           label="Scan Drop" 
           icon={ScanLine} 
           hint="Ingest nearby data" 
-          className="border-important/50 bg-important/5 drop-shadow-[0_0_8px_rgba(239,68,68,0.15)]"
+          className="border-important/50 bg-gradient-to-br from-important/10 to-transparent glow-signal"
         />
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
+        <h2 className="mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
           Real-Time Tunnels
         </h2>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
       </div>
-      <div className="mb-6 grid grid-cols-2 gap-3">
+      
+      <div className="mb-8 grid grid-cols-2 gap-4">
         <Tile to="/peer" label="WebRTC Link" icon={Network} hint="Direct connect" />
         <Tile to="/feed" label="Mesh Feed" icon={MessageSquare} hint="All messages" />
       </div>
@@ -94,11 +109,12 @@ function HomePage() {
           label="Mesh Sim"
           icon={Radio}
           hint="Demo A→B→C"
+          className="bg-black/20"
         />
       </div>
 
-      <p className="mt-8 text-center text-xs mono text-muted-foreground">
-        No internet required. No servers. No tracking. Messages live only on devices.
+      <p className="mt-10 mb-8 text-center text-xs mono text-muted-foreground/60 leading-relaxed max-w-sm mx-auto">
+        No internet required. No servers.<br/>Messages live only on devices.
       </p>
     </AppShell>
   );
@@ -106,15 +122,15 @@ function HomePage() {
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: "emergency" }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/40 p-3">
+    <div className={`rounded-xl border border-white/5 bg-black/40 p-4 backdrop-blur-md transition-colors ${accent === 'emergency' ? 'hover:border-emergency/30' : 'hover:border-signal/30'}`}>
       <div
-        className={`mono text-2xl font-bold ${
-          accent === "emergency" ? "text-emergency" : "text-foreground"
+        className={`font-display text-3xl font-extrabold tracking-tight ${
+          accent === "emergency" ? "text-emergency drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]" : "text-foreground drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
         }`}
       >
         {value}
       </div>
-      <div className="mono text-[10px] tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 mono text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -135,12 +151,17 @@ function Tile({
   return (
     <Link
       to={to}
-      className={`group flex flex-col items-start gap-2 rounded-2xl glass-panel p-5 transition-all hover-lift hover:border-signal/50 ${className}`}
+      className={`group relative overflow-hidden flex flex-col items-start gap-3 rounded-3xl glass-panel p-6 transition-all hover-lift hover:border-signal/60 ${className}`}
     >
-      <Icon className="h-7 w-7 text-signal transition-transform group-hover:scale-110" />
-      <div>
-        <div className="mono text-base font-bold text-foreground">{label}</div>
-        <div className="text-xs text-muted-foreground">{hint}</div>
+      <div className="absolute -right-6 -top-6 opacity-5 transition-transform group-hover:scale-150 group-hover:rotate-12">
+        <Icon className="h-32 w-32" />
+      </div>
+      <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 border border-white/10 shadow-inner group-hover:bg-signal/20 group-hover:border-signal/30 transition-colors">
+        <Icon className="h-6 w-6 text-foreground group-hover:text-signal transition-colors" />
+      </div>
+      <div className="relative z-10 mt-2">
+        <div className="text-lg font-bold text-foreground tracking-tight">{label}</div>
+        <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
       </div>
     </Link>
   );

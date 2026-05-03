@@ -11,53 +11,55 @@ function timeAgo(ts: number): string {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-const BORDER: Record<string, string> = {
-  emergency: "border-l-emergency",
-  important: "border-l-important",
-  general: "border-l-general",
+const GLOW: Record<string, string> = {
+  emergency: "shadow-[inset_4px_0_0_0_var(--color-emergency)] border-emergency/20 bg-gradient-to-r from-emergency/10 to-transparent",
+  important: "shadow-[inset_4px_0_0_0_var(--color-important)] border-important/20 bg-gradient-to-r from-important/10 to-transparent",
+  general: "shadow-[inset_4px_0_0_0_var(--color-general)] border-general/20",
 };
 
 export function MessageCard({ msg }: { msg: MeshMessage }) {
   return (
     <article
-      className={`rounded-lg border border-border border-l-4 bg-card p-4 overflow-hidden ${
-        BORDER[msg.priority]
+      className={`relative rounded-2xl border glass-panel p-5 overflow-hidden transition-all hover-lift ${
+        GLOW[msg.priority]
       } ${msg.priority === "emergency" ? "pulse-emergency" : ""}`}
     >
-      <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
           <PriorityBadge priority={msg.priority} />
           {msg.isMine && (
-            <span className="rounded-full border border-signal/40 px-2 py-0.5 text-[10px] mono text-signal">
+            <span className="rounded-full bg-signal/20 px-2 py-0.5 text-[10px] mono font-bold text-signal shadow-[0_0_8px_rgba(245,213,122,0.4)]">
               YOU
             </span>
           )}
         </div>
-        <span className="text-xs mono text-muted-foreground">{timeAgo(msg.timestamp)}</span>
+        <span className="text-xs mono text-muted-foreground bg-black/30 px-2 py-1 rounded-md">{timeAgo(msg.timestamp)}</span>
       </header>
 
-      <p className="mb-3 whitespace-pre-wrap break-words overflow-wrap-anywhere text-base leading-relaxed text-foreground">
+      <p className="mb-5 whitespace-pre-wrap break-words overflow-wrap-anywhere text-[15px] leading-relaxed text-foreground/90 font-medium drop-shadow-sm">
         {msg.content}
       </p>
 
-      <footer className="flex flex-wrap items-center justify-between gap-2 text-xs mono text-muted-foreground">
-        <span className="inline-flex items-center gap-1">
-          <User className="h-3 w-3" />
-          {msg.originName ?? "?"} · {msg.originDeviceId}
-        </span>
-        <span className="inline-flex items-center gap-3">
-          <span className="inline-flex items-center gap-1">
-            <Repeat2 className="h-3 w-3" /> {msg.hops} hops
+      <footer className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/5">
+        <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-md">
+          <User className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs mono text-muted-foreground">
+            {msg.originName ?? "?"} <span className="opacity-50 mx-1">•</span> {msg.originDeviceId}
           </span>
-          <span>TTL {msg.ttl}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1 text-xs mono text-muted-foreground">
+            <Repeat2 className="h-3.5 w-3.5" /> {msg.hops} hops
+          </span>
+          <span className="text-xs mono text-muted-foreground opacity-70">TTL {msg.ttl}</span>
           <Link
             to="/broadcast"
             search={{ relay: msg.id }}
-            className="rounded-md border border-signal/40 px-2 py-1 text-signal hover:bg-signal/10"
+            className="rounded-lg border border-signal/40 bg-signal/10 px-3 py-1.5 text-xs mono font-bold text-signal transition-colors hover:bg-signal hover:text-signal-foreground hover:shadow-[0_0_12px_rgba(245,213,122,0.5)]"
           >
             RELAY →
           </Link>
-        </span>
+        </div>
       </footer>
     </article>
   );
